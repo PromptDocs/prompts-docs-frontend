@@ -8,6 +8,7 @@ export interface AttachedFile {
   id: string;
   name: string;
   type: FileType;
+  isUploaded: boolean;
   size?: string;
   file?: File
 }
@@ -64,6 +65,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       id: Date.now().toString(),
       name: file.name,
       type: getFileType(file.name),
+      isUploaded: false,
       size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
       file: file
     };
@@ -114,20 +116,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       timestamp: new Date(Date.now() - 3600000),
     },
   ]);
-  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([
-    {
-      id: "1",
-      name: "employment_data_2024.xlsx",
-      type: "excel",
-      size: "2.4 MB",
-    },
-    {
-      id: "2",
-      name: "quarterly_report.hwp",
-      type: "hwp",
-      size: "1.8 MB",
-    },
-  ]);
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [taskProgress, setTaskProgress] = useState<TaskStep[]>([
     { id: "1", label: "Searching for Excel files...", status: "completed" },
     { id: "2", label: "Analyzing employment data...", status: "in-progress" },

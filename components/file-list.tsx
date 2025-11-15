@@ -7,6 +7,8 @@ import type { AttachedFile, FileType } from "@/components/chat-provider";
 import { useRef, useState } from "react";
 import { FilePreviewModal } from "@/components/file-preview-modal";
 import { useChatContext } from "@/components/chat-provider";
+import { Button } from "./ui/button";
+import { uploadFile } from "@/lib/api/file"
 
 const fileIcons: Record<FileType, React.ReactNode> = {
   excel: <FileSpreadsheet className="h-5 w-5 text-green-600" />,
@@ -65,8 +67,33 @@ export function FileList({ files }: FileListProps) {
                 <p className="text-xs text-muted-foreground">{file.size}</p>
               )}
             </div>
+            <Button
+              type="button"
+              onClick={async (e) => {
+                e.stopPropagation(); // 카드 click과 분리
+                if (!file.file) return;
+                await uploadFile(file.file);
+              }}
+            >
+              upload
+            </Button>
           </button>
         ))}
+        <div
+          className="rounded-lg border border-dashed border-border p-6 text-center hover:border-blue-500 select-none"
+          onClick={() => triggerFileSelect(fileInputRef.current)}
+        >
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={(e) => handleFileSelected(e.target.files)}
+            accept=".xlsx"
+          />
+          <p className="text-sm text-muted-foreground">
+            클릭하여 파일을 첨부해주세요
+          </p>
+        </div>
       </div>
       <FilePreviewModal
         file={selectedFile}
