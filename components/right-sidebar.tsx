@@ -25,7 +25,7 @@ function WorkspaceContent() {
       <ScrollArea className="flex-1">
         <div className="space-y-6 p-4">
           <div>
-            <h3 className="mb-3 text-xs font-medium text-muted-foreground">ATTACHED FILES</h3>
+            <h3 className="mb-3 text-xs font-medium text-muted-foreground">첨부파일</h3>
             <FileList files={attachedFiles} />
           </div>
           <div>

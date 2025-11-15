@@ -1,53 +1,93 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, type ReactNode } from "react";
 
-export type FileType = "excel" | "hwp" | "word" | "pdf"
+export type FileType = "excel" | "hwp" | "word" | "pdf";
 
 export interface AttachedFile {
-  id: string
-  name: string
-  type: FileType
-  size?: string
+  id: string;
+  name: string;
+  type: FileType;
+  size?: string;
 }
 
 export interface TaskStep {
-  id: string
-  label: string
-  status: "pending" | "in-progress" | "completed" | "error"
+  id: string;
+  label: string;
+  status: "pending" | "in-progress" | "completed" | "error";
 }
 
 export interface Message {
-  id: string
-  role: "user" | "assistant"
-  content: string
-  timestamp: Date
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
 }
 
 export interface ChatSession {
-  id: string
-  title: string
-  lastMessage: string
-  timestamp: Date
+  id: string;
+  title: string;
+  lastMessage: string;
+  timestamp: Date;
 }
 
 interface ChatContextType {
-  sessions: ChatSession[]
-  currentSessionId: string | null
-  messages: Message[]
-  attachedFiles: AttachedFile[]
-  taskProgress: TaskStep[]
-  setCurrentSessionId: (id: string | null) => void
-  addMessage: (message: Omit<Message, "id" | "timestamp">) => void
-  addFile: (file: AttachedFile) => void
-  removeFile: (id: string) => void
-  updateTaskProgress: (steps: TaskStep[]) => void
-  createNewSession: () => void
+  sessions: ChatSession[];
+  currentSessionId: string | null;
+  messages: Message[];
+  attachedFiles: AttachedFile[];
+  taskProgress: TaskStep[];
+  setCurrentSessionId: (id: string | null) => void;
+  addMessage: (message: Omit<Message, "id" | "timestamp">) => void;
+  addFile: (file: AttachedFile) => void;
+  removeFile: (id: string) => void;
+  updateTaskProgress: (steps: TaskStep[]) => void;
+  createNewSession: () => void;
+  triggerFileSelect: (inputRef: HTMLInputElement | null) => void;
+  handleFileSelected: (fileList: FileList | null) => void;
 }
 
-const ChatContext = createContext<ChatContextType | undefined>(undefined)
+const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
+  const triggerFileSelect = (input: HTMLInputElement | null) => {
+    input?.click();
+  };
+
+  const handleFileSelected = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+
+    const newAttached: AttachedFile = {
+      id: Date.now().toString(),
+      name: file.name,
+      type: getFileType(file.name),
+      size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+    };
+
+    addFile(newAttached);
+  };
+
+  const getFileType = (filename: string): FileType => {
+    const ext = filename.split(".").pop()?.toLowerCase();
+
+    switch (ext) {
+      case "xlsx":
+      case "xls":
+        return "excel";
+      case "hwp":
+        return "hwp";
+      case "doc":
+      case "docx":
+        return "word";
+      case "pdf":
+        return "pdf";
+      default:
+        return "pdf"; // fallback
+    }
+  };
+
   const [sessions, setSessions] = useState<ChatSession[]>([
     {
       id: "1",
@@ -61,16 +101,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       lastMessage: "Convert HWP to Word format...",
       timestamp: new Date(Date.now() - 7200000),
     },
-  ])
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>("1")
+  ]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>("1");
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       role: "assistant",
-      content: "Hello! I can help you analyze and process documents. What would you like to do today?",
+      content:
+        "Hello! I can help you analyze and process documents. What would you like to do today?",
       timestamp: new Date(Date.now() - 3600000),
     },
-  ])
+  ]);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([
     {
       id: "1",
@@ -84,34 +125,34 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       type: "hwp",
       size: "1.8 MB",
     },
-  ])
+  ]);
   const [taskProgress, setTaskProgress] = useState<TaskStep[]>([
     { id: "1", label: "Searching for Excel files...", status: "completed" },
     { id: "2", label: "Analyzing employment data...", status: "in-progress" },
     { id: "3", label: "Calculating averages...", status: "pending" },
     { id: "4", label: "Generating report...", status: "pending" },
-  ])
+  ]);
 
   const addMessage = (message: Omit<Message, "id" | "timestamp">) => {
     const newMessage: Message = {
       ...message,
       id: Date.now().toString(),
       timestamp: new Date(),
-    }
-    setMessages((prev) => [...prev, newMessage])
-  }
+    };
+    setMessages((prev) => [...prev, newMessage]);
+  };
 
   const addFile = (file: AttachedFile) => {
-    setAttachedFiles((prev) => [...prev, file])
-  }
+    setAttachedFiles((prev) => [...prev, file]);
+  };
 
   const removeFile = (id: string) => {
-    setAttachedFiles((prev) => prev.filter((f) => f.id !== id))
-  }
+    setAttachedFiles((prev) => prev.filter((f) => f.id !== id));
+  };
 
   const updateTaskProgress = (steps: TaskStep[]) => {
-    setTaskProgress(steps)
-  }
+    setTaskProgress(steps);
+  };
 
   const createNewSession = () => {
     const newSession: ChatSession = {
@@ -119,13 +160,13 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       title: "New Chat",
       lastMessage: "",
       timestamp: new Date(),
-    }
-    setSessions((prev) => [newSession, ...prev])
-    setCurrentSessionId(newSession.id)
-    setMessages([])
-    setAttachedFiles([])
-    setTaskProgress([])
-  }
+    };
+    setSessions((prev) => [newSession, ...prev]);
+    setCurrentSessionId(newSession.id);
+    setMessages([]);
+    setAttachedFiles([]);
+    setTaskProgress([]);
+  };
 
   return (
     <ChatContext.Provider
@@ -141,17 +182,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         removeFile,
         updateTaskProgress,
         createNewSession,
+        triggerFileSelect,
+        handleFileSelected,
       }}
     >
       {children}
     </ChatContext.Provider>
-  )
+  );
 }
 
 export function useChatContext() {
-  const context = useContext(ChatContext)
+  const context = useContext(ChatContext);
   if (!context) {
-    throw new Error("useChatContext must be used within ChatProvider")
+    throw new Error("useChatContext must be used within ChatProvider");
   }
-  return context
+  return context;
 }
