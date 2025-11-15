@@ -9,6 +9,7 @@ export interface AttachedFile {
   name: string;
   type: FileType;
   size?: string;
+  file?: File
 }
 
 export interface TaskStep {
@@ -64,6 +65,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       name: file.name,
       type: getFileType(file.name),
       size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+      file: file
     };
 
     addFile(newAttached);
