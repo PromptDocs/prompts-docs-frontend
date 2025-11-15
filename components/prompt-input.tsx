@@ -8,13 +8,21 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useChatContext } from "@/components/chat-provider"
 
+import { sendMessage } from "@/lib/api/chat";
+
 export function PromptInput() {
   const [input, setInput] = useState("")
   const { addMessage } = useChatContext()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 채팅창에서 채팅을 입력했을 때 실행
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
+
+    const response = await sendMessage({
+      'content': input,
+      'fileGroupId': null
+    });
 
     addMessage({ role: "user", content: input })
     setInput("")
@@ -23,8 +31,7 @@ export function PromptInput() {
     setTimeout(() => {
       addMessage({
         role: "assistant",
-        content:
-          "I've found the relevant files and I'm ready to process them. Please review the files in the workspace and click CONTINUE to proceed.",
+        content: response.answer,
       })
     }, 1000)
   }
