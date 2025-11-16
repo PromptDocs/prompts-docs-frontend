@@ -51,7 +51,7 @@ export function FileList({ files }: FileListProps) {
     <>
       <div className="space-y-2">
         {files.map((file) => (
-          <button
+          <div
             key={file.id}
             onClick={() => setSelectedFile(file)}
             className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:bg-accent"
@@ -67,8 +67,9 @@ export function FileList({ files }: FileListProps) {
                 <p className="text-xs text-muted-foreground">{file.size}</p>
               )}
             </div>
-            <Button
+            <button
               type="button"
+              className="flex items-center bg-blue-500 p-2 rounded cursor-pointer transition-colors hover:bg-accent"
               onClick={async (e) => {
                 e.stopPropagation(); // 카드 click과 분리
                 if (!file.file) return;
@@ -76,8 +77,8 @@ export function FileList({ files }: FileListProps) {
               }}
             >
               upload
-            </Button>
-          </button>
+            </button>
+          </div>
         ))}
         <div
           className="rounded-lg border border-dashed border-border p-6 text-center hover:border-blue-500 select-none"

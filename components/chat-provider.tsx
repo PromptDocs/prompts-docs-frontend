@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createChatSession, searchExistingChatSession, sendMessage } from "@/lib/api/chat";
 
 export type FileType = "excel" | "hwp" | "word" | "pdf";
 
@@ -10,7 +11,7 @@ export interface AttachedFile {
   type: FileType;
   isUploaded: boolean;
   size?: string;
-  file?: File
+  file?: File;
 }
 
 export interface TaskStep {
@@ -23,19 +24,21 @@ export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  fileGroupId: string;
   timestamp: Date;
 }
 
 export interface ChatSession {
   id: string;
-  title: string;
+  chatSessionId: string;
+  chatSessionName: string;
   lastMessage: string;
   timestamp: Date;
 }
 
 interface ChatContextType {
   sessions: ChatSession[];
-  currentSessionId: string | null;
+  currentSessionId: string | null | undefined;
   messages: Message[];
   attachedFiles: AttachedFile[];
   taskProgress: TaskStep[];
@@ -67,7 +70,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       type: getFileType(file.name),
       isUploaded: false,
       size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-      file: file
+      file: file,
     };
 
     addFile(newAttached);
@@ -92,27 +95,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const [sessions, setSessions] = useState<ChatSession[]>([
-    {
-      id: "1",
-      title: "Employment Rate Analysis",
-      lastMessage: "Calculate average from Excel files...",
-      timestamp: new Date(Date.now() - 3600000),
-    },
-    {
-      id: "2",
-      title: "Document Formatting",
-      lastMessage: "Convert HWP to Word format...",
-      timestamp: new Date(Date.now() - 7200000),
-    },
-  ]);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>("1");
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       role: "assistant",
       content:
-        "Hello! I can help you analyze and process documents. What would you like to do today?",
+        "안녕하세요! 무엇을 도와드릴까요?",
+      fileGroupId: "",
       timestamp: new Date(Date.now() - 3600000),
     },
   ]);
@@ -124,13 +115,28 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     { id: "4", label: "Generating report...", status: "pending" },
   ]);
 
-  const addMessage = (message: Omit<Message, "id" | "timestamp">) => {
-    const newMessage: Message = {
-      ...message,
-      id: Date.now().toString(),
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, newMessage]);
+  const addMessage = async (message: Omit<Message, "id" | "timestamp">) => {
+    // 만약 현재 선택된 채팅 세션이 없으면?
+    if(!currentSessionId){
+      // 새로운 채팅방을 먼저 만듦
+      await createNewSession();
+
+      console.log(currentSessionId);
+
+      // 채팅방이 만들어졌으면 해당 채팅방에 채팅침
+      const newMessage: Message = {
+        ...message,
+        id: Date.now().toString(),
+        timestamp: new Date(),
+      };
+
+      await sendMessage({
+        content: message.content,
+        fileGroupId: message.fileGroupId
+      });
+      setMessages((prev) => [...prev, newMessage]);
+
+    }
   };
 
   const addFile = (file: AttachedFile) => {
@@ -145,19 +151,40 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setTaskProgress(steps);
   };
 
-  const createNewSession = () => {
-    const newSession: ChatSession = {
-      id: Date.now().toString(),
-      title: "New Chat",
-      lastMessage: "",
-      timestamp: new Date(),
-    };
-    setSessions((prev) => [newSession, ...prev]);
-    setCurrentSessionId(newSession.id);
-    setMessages([]);
-    setAttachedFiles([]);
-    setTaskProgress([]);
+  // 채팅 세션 리스트 불러오기
+  const initializeChatSession = () => {
+    searchExistingChatSession()
+      .then((res) => {
+        setSessions(res);
+      })
+  }
+
+  // 새로운 채팅 세션 만들기(사이드바 왼쪽 '+' 눌렀을 때)
+  const createNewSession = async() => {
+    await createChatSession()
+      .then((res) => {
+        const newSession: ChatSession = {
+          id: res.id,
+          chatSessionId: res.chatSessionId,
+          chatSessionName: res.chatSessionName,
+          lastMessage: "",
+          timestamp: res.createDt ? res.createDt : res.updateDt,
+        };
+        console.log(newSession);
+        setSessions((prev) => [newSession, ...prev]);
+        setCurrentSessionId(newSession.id);
+        setMessages([]);
+        setAttachedFiles([]);
+        setTaskProgress([]);
+      })
+      .catch((err) => {
+        console.error("새 채팅방 생성 오류:", err);
+      });
   };
+
+  useEffect(() => {
+    initializeChatSession();
+  }, [])
 
   return (
     <ChatContext.Provider

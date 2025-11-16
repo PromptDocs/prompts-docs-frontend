@@ -1,20 +1,45 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useChatContext } from "@/components/chat-provider"
-import { FileList } from "@/components/file-list"
-import { TaskProgress } from "@/components/task-progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Files, ListChecks } from "lucide-react"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useChatContext } from "@/components/chat-provider";
+import { FileList } from "@/components/file-list";
+import { TaskProgress } from "@/components/task-progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Files, ListChecks } from "lucide-react";
+import { useState } from "react";
 
 function WorkspaceContent() {
-  const { attachedFiles, taskProgress } = useChatContext()
+  const { attachedFiles, taskProgress, currentSessionId } = useChatContext();
 
   const handleContinue = () => {
-    console.log("Continue button clicked - triggering backend execution")
+    console.log("Continue button clicked - triggering backend execution");
     // This would trigger the backend MCP execution
+  };
+
+  if (!currentSessionId) {
+    return (
+      <div className="flex h-full flex-col bg-card">
+        <div className="border-b border-border p-4">
+          <h2 className="text-sm font-semibold text-foreground">Workspace</h2>
+        </div>
+        <ScrollArea className="flex-1">
+          <div className="space-y-6 p-4">
+            <div>
+              <h3 className="mb-3 text-xs font-medium text-muted-foreground">
+                첨부파일
+              </h3>
+              <FileList files={attachedFiles} />
+            </div>
+          </div>
+        </ScrollArea>
+        <div className="border-t border-border p-4">
+          <Button onClick={handleContinue} className="w-full" size="lg">
+            CONTINUE
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -25,11 +50,15 @@ function WorkspaceContent() {
       <ScrollArea className="flex-1">
         <div className="space-y-6 p-4">
           <div>
-            <h3 className="mb-3 text-xs font-medium text-muted-foreground">첨부파일</h3>
+            <h3 className="mb-3 text-xs font-medium text-muted-foreground">
+              첨부파일
+            </h3>
             <FileList files={attachedFiles} />
           </div>
           <div>
-            <h3 className="mb-3 text-xs font-medium text-muted-foreground">TASK PROGRESS</h3>
+            <h3 className="mb-3 text-xs font-medium text-muted-foreground">
+              TASK PROGRESS
+            </h3>
             <TaskProgress steps={taskProgress} />
           </div>
         </div>
@@ -40,13 +69,23 @@ function WorkspaceContent() {
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 export function RightSidebar() {
-  const [open, setOpen] = useState(false)
-  const { attachedFiles, taskProgress } = useChatContext()
+  const [open, setOpen] = useState(false);
+  const { attachedFiles, taskProgress, currentSessionId } = useChatContext();
 
+  if (!currentSessionId) {
+    return (
+      <>
+        {/* Desktop Sidebar */}
+        <aside className="hidden w-80 border-l border-border lg:block">
+          <WorkspaceContent />
+        </aside>
+      </>
+    );
+  }
   return (
     <>
       {/* Desktop Sidebar */}
@@ -89,5 +128,5 @@ export function RightSidebar() {
         </Tabs>
       </div>
     </>
-  )
+  );
 }

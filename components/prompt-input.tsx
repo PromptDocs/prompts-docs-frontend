@@ -24,7 +24,7 @@ export function PromptInput() {
       'fileGroupId': null
     });
 
-    addMessage({ role: "user", content: input })
+    addMessage({ role: "user", content: input, fileGroupId: "" })
     setInput("")
 
     // Simulate AI response
@@ -32,6 +32,7 @@ export function PromptInput() {
       addMessage({
         role: "assistant",
         content: response.answer,
+        fileGroupId: ""
       })
     }, 1000)
   }

@@ -23,16 +23,16 @@ function SidebarContent() {
         <div className="space-y-1 p-2">
           {sessions.map((session) => (
             <button
-              key={session.id}
-              onClick={() => setCurrentSessionId(session.id)}
+              key={session.chatSessionId}
+              onClick={() => setCurrentSessionId(session.chatSessionId)}
               className={cn(
                 "flex w-full flex-col items-start gap-1 rounded-lg p-3 text-left transition-colors hover:bg-accent",
-                currentSessionId === session.id && "bg-accent",
+                currentSessionId === session.chatSessionId && "bg-accent",
               )}
             >
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">{session.title}</span>
+                <span className="text-sm font-medium text-foreground">{session.chatSessionName}</span>
               </div>
               <p className="line-clamp-1 text-xs text-muted-foreground">{session.lastMessage}</p>
             </button>
